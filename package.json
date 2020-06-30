@@ -1,8 +1,9 @@
 {
   "name": "@dangao/koa-framework",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "dist/index.js",
   "author": "kedan",
+  "repository": "https://github.com/dangaogit/koa-framework.git",
   "license": "MIT",
   "scripts": {
     "build": "tsc -p ./ -d --listFiles --traceResolution --extendedDiagnostics",
