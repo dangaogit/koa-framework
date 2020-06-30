@@ -1,0 +1,13 @@
+POST http://127.0.0.1:8888/api/user HTTP/1.1
+content-type: application/json;charset=utf-8
+
+{"query":{"filters":[],"range":{"field":"logTime","gte":1582248780368,"lte":1582853580368},"search":""},"sort":{"field":"logTime","isAsc":true}}
+
+###
+GET http://127.0.0.1:8888/api/user HTTP/1.1
+
+###
+DELETE http://127.0.0.1:8888/api/info/user HTTP/1.1
+
+###
+GET http://127.0.0.1:8888/api/define-body HTTP/1.1
