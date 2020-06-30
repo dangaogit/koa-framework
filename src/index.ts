@@ -7,6 +7,7 @@ import { KoaFrameworkError } from "./error";
 import { config } from "./config";
 import { Log } from "@dangao/node-log";
 import { FileUtils } from "./utils/file";
+import { NetworkUtil } from "./utils/network";
 
 const log = new Log("KoaFramework", config.log);
 
@@ -16,20 +17,52 @@ export namespace KoaFramework {
     isExact: boolean;
   }
 
+  export interface Config {
+    scanPath: string;
+    port?: number;
+    middlewares?: Koa.Middleware[];
+    afterMiddlewares?: Koa.Middleware[];
+  }
+
   export class Application {
     private controller_map = new Map<string, ControllerInstance>();
     private onInitializedFun = (instance: Application) => instance;
+    private __config: Required<Config>;
+    private __initPromise: Promise<void>;
     /**
      *
      * @param controller_path scan controller path
      * @param app `Koa` instance
      */
-    constructor(private controller_path: string, app?: Koa) {
+    constructor(option: string | Config, private app: Koa = new Koa()) {
       log.info("App starting...");
-      if (app) {
-        app.use(this.onRequest);
-      }
-      this.init();
+      const { scanPath, port = 8888, middlewares = [], afterMiddlewares = [] } = typeof option === "string" ? ({ scanPath: option } as Config) : option;
+
+      middlewares.forEach((middleware) => app.use(middleware));
+
+      app.use(this.onRequest);
+
+      afterMiddlewares.forEach((middleware) => app.use(middleware));
+
+      this.__config = {
+        scanPath,
+        port,
+        middlewares,
+        afterMiddlewares,
+      };
+
+      this.__initPromise = this.init();
+    }
+
+    public async start(call?: () => void) {
+      await this.__initPromise;
+
+      const { port } = this.__config;
+      log.info("App listen start...");
+      this.app.listen(port, () => {
+        log.info("App listen completed, please open", `http://${NetworkUtil.getLocalIP()}:${port}`);
+        call && call();
+      });
     }
 
     private onRequest = async (ctx: Koa.Context, next: Koa.Next) => {
@@ -43,7 +76,7 @@ export namespace KoaFramework {
         const { listener, controller } = listenerMatchResult.match;
         const params: RequestParams = Reflect.getMetadata(RequestMetadata.params, listener) || [];
         this.handleResponse(listener, ctx);
-        const resultParams = await Promise.all(params.map(param => param(ctx, controller)));
+        const resultParams = await Promise.all(params.map((param) => param(ctx, controller)));
         const checkParamsNotNullResultIndex = this.handleParamsNotNull(listener, resultParams);
         if (typeof checkParamsNotNullResultIndex === "number") {
           ctx.status = 401;
@@ -51,7 +84,7 @@ export namespace KoaFramework {
           return resolve(KoaFrameworkError(`Parameter index ${checkParamsNotNullResultIndex} cannot be null!`, ctx));
         }
         resolve(await listener(...resultParams));
-      }).catch(async e => {
+      }).catch(async (e) => {
         log.warn(e);
         ctx.status = 404;
         return KoaFrameworkError(e, ctx);
@@ -78,7 +111,7 @@ export namespace KoaFramework {
 
     private handleResponse(listener: RequestListener<any>, ctx: Context) {
       const handlers: ResponseHandler[] = Reflect.getMetadata(ResponseMetadata.response_handler, listener) || [];
-      handlers.forEach(handler => handler(ctx));
+      handlers.forEach((handler) => handler(ctx));
     }
 
     private matchController(ctx: Context) {
@@ -96,8 +129,8 @@ export namespace KoaFramework {
             isExact: matchListenerPathResult.isExact,
             match: {
               controller,
-              listener: matchListenerPathResult.match
-            }
+              listener: matchListenerPathResult.match,
+            },
           };
           if (matchListenerPathResult.isExact) {
             // 精确匹配直接跳出循环
@@ -112,8 +145,8 @@ export namespace KoaFramework {
             isExact: false,
             match: {
               controller,
-              listener: matchListenerPathResult.match
-            }
+              listener: matchListenerPathResult.match,
+            },
           };
         }
       }
@@ -137,18 +170,18 @@ export namespace KoaFramework {
             if (matchMethodResult.isExact) {
               result = {
                 isExact: true,
-                match: listener
+                match: listener,
               };
             } else {
               result = {
                 isExact: false,
-                match: listener
+                match: listener,
               };
             }
           } else if (path === "") {
             result = {
               isExact: false,
-              match: listener
+              match: listener,
             };
           }
           if (result) {
@@ -177,13 +210,13 @@ export namespace KoaFramework {
         if (new RegExp(ctx.method, "i").test(method)) {
           result = {
             isExact: true,
-            match: method
+            match: method,
           };
           break;
         } else if (method === "") {
           result = {
             isExact: false,
-            match: method
+            match: method,
           };
         }
       }
@@ -227,7 +260,8 @@ export namespace KoaFramework {
     }
 
     private async init() {
-      await this.scanController().catch(e => {
+      
+      await this.scanController().catch((e) => {
         log.error(e);
       });
       log.info(`App startup.`);
@@ -235,9 +269,9 @@ export namespace KoaFramework {
     }
 
     private async scanController() {
-      const { controller_path } = this;
-      const paths = await FileUtils.readDir(controller_path);
-      await this.deepPath(paths, async path => {
+      const { scanPath } = this.__config;
+      const paths = await FileUtils.readDir(scanPath);
+      await this.deepPath(paths, async (path) => {
         await this.registerController(path);
       });
     }
@@ -258,7 +292,7 @@ export namespace KoaFramework {
         path: mapping_path,
         ident: ControllerMetadata.ident,
         target,
-        listeners: Reflect.getMetadata(RequestMetadata.listeners, instance)
+        listeners: Reflect.getMetadata(RequestMetadata.listeners, instance),
       });
     }
 
@@ -290,7 +324,7 @@ export namespace KoaFramework {
       const app = new Application(controller_path);
       return {
         middleware: app.onRequest,
-        initialized: new Promise(resolve => app.onInitialized(() => resolve(app)))
+        initialized: new Promise((resolve) => app.onInitialized(() => resolve(app))),
       };
     }
 
@@ -302,3 +336,5 @@ export namespace KoaFramework {
 export default KoaFramework;
 
 export * from "./decorators";
+export const App = KoaFramework.Application;
+export { Koa };

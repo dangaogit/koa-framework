@@ -1,6 +1,6 @@
 {
   "name": "@dangao/koa-framework",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "main": "dist/index.js",
   "author": "kedan",
   "repository": "https://github.com/dangaogit/koa-framework.git",
@@ -15,16 +15,18 @@
   "files": [
     "dist/*"
   ],
-  "devDependencies": {
-    "@types/jest": "^26.0.3",
+  "peerDependencies": {
     "@types/koa": "^2.11.0",
     "@types/node": "^14.0.14",
-    "jest": "^26.1.0",
     "koa": "^2.11.0",
     "reflect-metadata": "^0.1.13",
-    "ts-jest": "^26.1.1",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.5"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.3",
+    "jest": "^26.1.0",
+    "ts-jest": "^26.1.1"
   },
   "jest": {
     "testEnvironment": "node",

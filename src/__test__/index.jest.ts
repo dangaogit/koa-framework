@@ -9,15 +9,10 @@ import { HttpClient } from "../utils/http";
 jest.useFakeTimers();
 
 describe("Framework", () => {
-  const [framework, koaApp] = getApp();
+  const framework = getApp();
   test("测试配置目录后是否将所有Controller自动注入到application中", async () => {
     const app = await framework;
     expect(app.getControllerLength()).toBe(7);
-  });
-
-  test("测试构造函数传入app后返回是否正确", async () => {
-    await framework;
-    expect(koaApp.middleware.length).toBe(1);
   });
 
   test("测试onRequest触发后path匹配是否正确", async () => {

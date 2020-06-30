@@ -1,4 +1,4 @@
-import { Controller, Request } from "../../../main";
+import { Controller, Request } from "../..";
 
 @Controller("/path")
 export default class {
