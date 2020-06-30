@@ -92,6 +92,11 @@ export namespace KoaFramework {
       /** 如果用户自己输出了数据，则不再使用函数返回值作为response.body */
       if (typeof result !== "undefined") {
         ctx.body = result;
+      } else if (ctx.path === "/" && this.controller_map.size === 0) {
+        ctx.set("content-type", "text/html;charset=utf-8");
+        ctx.body = `
+        <h1>Hello @dangao/koa-framework. you're not currently configured with 'scanPath', please add 'scanPath' config to eliminate this page.</h1>
+        `;
       }
 
       await next();
@@ -260,7 +265,6 @@ export namespace KoaFramework {
     }
 
     private async init() {
-      
       await this.scanController().catch((e) => {
         log.error(e);
       });
