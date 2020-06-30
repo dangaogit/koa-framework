@@ -1,6 +1,6 @@
 {
   "name": "@dangao/koa-framework",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "dist/index.js",
   "author": "kedan",
   "license": "MIT",
@@ -11,6 +11,9 @@
     "test:dev": "yarn test:cov --watchAll",
     "debug": "jest --verbose"
   },
+  "files": [
+    "dist/*"
+  ],
   "devDependencies": {
     "@types/jest": "^26.0.3",
     "@types/koa": "^2.11.0",
