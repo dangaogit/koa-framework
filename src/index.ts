@@ -22,11 +22,13 @@ export namespace KoaFramework {
     port?: number;
     middlewares?: Koa.Middleware[];
     afterMiddlewares?: Koa.Middleware[];
+    /** 禁止在初始化时打印 */
+    noConsoleInit?: boolean;
   }
 
-  export class Application {
+  export class Application<S = any, C = any> {
     private controller_map = new Map<string, ControllerInstance>();
-    private onInitializedFun = (instance: Application) => instance;
+    private onInitializedFun = (instance: Application<S, C>) => instance;
     private __config: Required<Config>;
     private __initPromise: Promise<void>;
     /**
@@ -34,9 +36,9 @@ export namespace KoaFramework {
      * @param controller_path scan controller path
      * @param app `Koa` instance
      */
-    constructor(option: string | Config, private app: Koa = new Koa()) {
+    constructor(option: string | Config, public app: Koa<S, C> = new Koa()) {
       log.info("App starting...");
-      const { scanPath, port = 8888, middlewares = [], afterMiddlewares = [] } = typeof option === "string" ? ({ scanPath: option } as Config) : option;
+      const { noConsoleInit = false, scanPath, port = 8888, middlewares = [], afterMiddlewares = [] } = typeof option === "string" ? ({ scanPath: option } as Config) : option;
 
       middlewares.forEach((middleware) => app.use(middleware));
 
@@ -49,6 +51,7 @@ export namespace KoaFramework {
         port,
         middlewares,
         afterMiddlewares,
+        noConsoleInit,
       };
 
       this.__initPromise = this.init();
@@ -57,10 +60,12 @@ export namespace KoaFramework {
     public async start(call?: () => void) {
       await this.__initPromise;
 
-      const { port } = this.__config;
+      const { port, noConsoleInit } = this.__config;
       log.info("App listen start...");
       this.app.listen(port, () => {
-        log.info("App listen completed, please open", `http://${NetworkUtil.getLocalIP()}:${port}`);
+        if (!noConsoleInit) {
+          log.info("App listen completed, please open", `http://${NetworkUtil.getLocalIP()}:${port}`);
+        }
         call && call();
       });
     }
