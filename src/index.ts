@@ -28,6 +28,8 @@ export namespace KoaFramework {
     /** 禁止在初始化时打印 */
     noConsoleInit?: boolean;
     logConfig?: LogOption;
+    /** 没有匹配到路由时是否直接返回404 */
+    noMatchStop?: boolean;
   }
 
   export type Config<State, Context> = InitRequiredConfig<State, Context> & NotRequiredConfig;
@@ -81,6 +83,8 @@ export namespace KoaFramework {
     }
 
     private onRequest = async (ctx: Koa.Context, next: Koa.Next) => {
+      const { noMatchStop } = this.__config;
+
       log.info(`onRequest: ${ctx.method} ${ctx.href}`);
       const result = await new Promise(async (resolve, reject) => {
         // 匹配监听
@@ -100,21 +104,23 @@ export namespace KoaFramework {
         }
         resolve(await listener(...resultParams));
       }).catch(async (e) => {
-        log.warn(e);
-        ctx.status = 404;
-        return KoaFrameworkError(e, ctx);
+        if (noMatchStop) {
+          log.warn(e);
+          ctx.status = 404;
+          return KoaFrameworkError(e, ctx);
+        } else {
+          await next();
+        }
       });
       /** 如果用户自己输出了数据，则不再使用函数返回值作为response.body */
       if (typeof result !== "undefined") {
         ctx.body = result;
       } else if (ctx.path === "/" && this.controller_map.size === 0) {
         ctx.set("content-type", "text/html;charset=utf-8");
-        ctx.body = `
-        <h1>Hello @dangao/koa-framework. you're not currently configured with 'scanPath', please add 'scanPath' config to eliminate this page.</h1>
-        `;
+        ctx.body = `<h1>Hello @dangao/koa-framework. you're not currently configured with 'scanPath', please add 'scanPath' config to eliminate this page.</h1>`;
+      } else {
+        await next();
       }
-
-      await next();
     };
 
     private handleParamsNotNull(listener: RequestListener<any>, params: any[]) {

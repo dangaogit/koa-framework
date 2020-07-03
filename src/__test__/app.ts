@@ -7,6 +7,7 @@ export async function getApp(): Promise<KoaFramework.Application> {
   const app = new KoaFramework.Application({
     scanPath: controller_path,
     port: 8888,
+    noMatchStop: true
   });
   await app.start();
   return app;
