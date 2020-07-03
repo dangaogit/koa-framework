@@ -1,6 +1,6 @@
 {
   "name": "@dangao/koa-framework",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "main": "dist/index.js",
   "author": "kedan",
   "repository": "https://github.com/dangaogit/koa-framework.git",

@@ -108,8 +108,6 @@ export namespace KoaFramework {
           log.warn(e);
           ctx.status = 404;
           return KoaFrameworkError(e, ctx);
-        } else {
-          await next();
         }
       });
       /** 如果用户自己输出了数据，则不再使用函数返回值作为response.body */
