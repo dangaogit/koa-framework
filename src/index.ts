@@ -4,12 +4,12 @@ import { ControllerInstance, ControllerMetadata, RequestMetadata, ContextMetaDat
 import Koa from "koa";
 import { RequestListener, RequestParams, Context, ResponseMetadata, ResponseHandler } from "./decorators";
 import { KoaFrameworkError } from "./error";
-import { config } from "./config";
-import { Log } from "@dangao/node-log";
+import { Log, LogOption } from "@dangao/node-log";
 import { FileUtils } from "./utils/file";
 import { NetworkUtil } from "./utils/network";
+import { logConfig, setOption } from "./config";
 
-const log = new Log("KoaFramework", config.log);
+const log = new Log("KoaFramework", logConfig);
 
 export namespace KoaFramework {
   interface MatchInfo<T> {
@@ -17,28 +17,40 @@ export namespace KoaFramework {
     isExact: boolean;
   }
 
-  export interface Config {
+  interface InitRequiredConfig<State, Context> {
     scanPath: string;
     port?: number;
-    middlewares?: Koa.Middleware[];
-    afterMiddlewares?: Koa.Middleware[];
+    middlewares?: Koa.Middleware<State, Context>[];
+    afterMiddlewares?: Koa.Middleware<State, Context>[];
+  }
+
+  interface NotRequiredConfig {
     /** 禁止在初始化时打印 */
     noConsoleInit?: boolean;
+    logConfig?: LogOption;
   }
+
+  export type Config<State, Context> = InitRequiredConfig<State, Context> & NotRequiredConfig;
 
   export class Application<S = any, C = any> {
     private controller_map = new Map<string, ControllerInstance>();
     private onInitializedFun = (instance: Application<S, C>) => instance;
-    private __config: Required<Config>;
+    private __config: Required<InitRequiredConfig<S, C>> & NotRequiredConfig;
     private __initPromise: Promise<void>;
     /**
      *
      * @param controller_path scan controller path
      * @param app `Koa` instance
      */
-    constructor(option: string | Config, public app: Koa<S, C> = new Koa()) {
+    constructor(_option: string | Config<S, C>, public app: Koa<S, C> = new Koa()) {
+      const option: Config<S, C> = typeof _option === "string" ? ({ scanPath: _option } as Config<S, C>) : _option;
+      const { logConfig, port = 8888, middlewares = [], afterMiddlewares = [] } = option;
+
+      if (logConfig) {
+        setOption(logConfig);
+      }
+
       log.info("App starting...");
-      const { noConsoleInit = false, scanPath, port = 8888, middlewares = [], afterMiddlewares = [] } = typeof option === "string" ? ({ scanPath: option } as Config) : option;
 
       middlewares.forEach((middleware) => app.use(middleware));
 
@@ -46,13 +58,11 @@ export namespace KoaFramework {
 
       afterMiddlewares.forEach((middleware) => app.use(middleware));
 
-      this.__config = {
-        scanPath,
+      this.__config = Object.assign(option, {
         port,
         middlewares,
         afterMiddlewares,
-        noConsoleInit,
-      };
+      });
 
       this.__initPromise = this.init();
     }

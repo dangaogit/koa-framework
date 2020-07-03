@@ -1,11 +1,16 @@
-import { LogOption } from "@dangao/node-log"
+import { LogOption } from "@dangao/node-log";
 
-const logConfig: LogOption = {
+export const logConfig: LogOption = {
   console: true
 };
 
-export const config = {
-  log: logConfig
+export function setOption(option: LogOption) {
+  Object.entries(option).forEach(([key, value]) => {
+    Reflect.set(logConfig, key, value);
+  });
 }
 
-export default config;
+export default {
+  logConfig,
+  setOption
+};

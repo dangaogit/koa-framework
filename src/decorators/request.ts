@@ -4,7 +4,7 @@ import { Log } from '@dangao/node-log';
 import config from '../config';
 import { HttpTypes } from '../http.types';
 
-const log = new Log("RequestDecorator", config.log);
+const log = new Log("RequestDecorator", config.logConfig);
 
 export type RequestMethodType = HttpTypes.Method | "";
 export type RequestListeners<Res = any> = Set<RequestListener<Res>>;
