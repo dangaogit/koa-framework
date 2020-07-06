@@ -68,9 +68,15 @@ export namespace KoaFramework {
 
       this.__initPromise = this.init();
 
-      app.onerror = e => {
-        log.error(JSON.stringify(e));
-      }
+      app.onerror = (e) => {
+        log.error(
+          JSON.stringify({
+            name: e.name,
+            message: e.message,
+            stack: e.stack,
+          })
+        );
+      };
     }
 
     public async start(call?: () => void) {
