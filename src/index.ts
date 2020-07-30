@@ -6,7 +6,6 @@ import { RequestListener, RequestParams, Context, ResponseMetadata, ResponseHand
 import { KoaFrameworkError } from "./error";
 import { FileUtils } from "./utils/file";
 import { NetworkUtil } from "./utils/network";
-import { setOption } from "./config";
 import { appLog } from "./log";
 import { LogOutputOption } from "@dangao/node-log";
 
@@ -50,7 +49,8 @@ export namespace KoaFramework {
       const { logConfig, port = 8888, middlewares = [], afterMiddlewares = [] } = option;
 
       if (logConfig) {
-        setOption(logConfig);
+        appLog.setOption(logConfig);
+        log.setOption(logConfig);
       }
 
       log.info("App starting...");
