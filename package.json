@@ -1,6 +1,6 @@
 {
   "name": "@dangao/koa-framework",
-  "version": "0.1.13",
+  "version": "0.2.0",
   "main": "dist/index.js",
   "author": "kedan",
   "repository": "https://github.com/dangaogit/koa-framework.git",
@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@dangao/date-util-es": "^0.0.4",
-    "@dangao/node-log": "^0.0.7",
+    "@dangao/node-log": "^0.1.1",
     "@types/koa": "^2.11.0",
     "@types/node": "^14.0.14",
     "koa": "^2.11.0",

@@ -1,10 +1,9 @@
 import { RequestMetadata, ControllerInstance } from '../metadata.constants';
 import { Context } from './param';
-import { Log } from '@dangao/node-log';
-import config from '../config';
 import { HttpTypes } from '../http.types';
+import { appLog } from '../log';
 
-const log = new Log("RequestDecorator", config.logConfig);
+const log = appLog.getDeriveLog("RequestDecorator");
 
 export type RequestMethodType = HttpTypes.Method | "";
 export type RequestListeners<Res = any> = Set<RequestListener<Res>>;

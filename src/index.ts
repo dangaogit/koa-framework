@@ -4,12 +4,13 @@ import { ControllerInstance, ControllerMetadata, RequestMetadata, ContextMetaDat
 import Koa from "koa";
 import { RequestListener, RequestParams, Context, ResponseMetadata, ResponseHandler } from "./decorators";
 import { KoaFrameworkError } from "./error";
-import { Log, LogOption } from "@dangao/node-log";
 import { FileUtils } from "./utils/file";
 import { NetworkUtil } from "./utils/network";
-import { logConfig, setOption } from "./config";
+import { setOption } from "./config";
+import { appLog } from "./log";
+import { LogOutputOption } from "@dangao/node-log";
 
-const log = new Log("KoaFramework", logConfig);
+const log = appLog.getDeriveLog("Index");
 
 export namespace KoaFramework {
   interface MatchInfo<T> {
@@ -27,7 +28,7 @@ export namespace KoaFramework {
   interface NotRequiredConfig {
     /** 禁止在初始化时打印 */
     noConsoleInit?: boolean;
-    logConfig?: LogOption;
+    logConfig?: LogOutputOption;
     /** 没有匹配到路由时是否直接返回404 */
     noMatchStop?: boolean;
   }
