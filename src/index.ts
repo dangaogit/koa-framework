@@ -24,20 +24,23 @@ export namespace KoaFramework {
     afterMiddlewares?: Koa.Middleware<State, Context>[];
   }
 
-  interface NotRequiredConfig {
+  interface NotRequiredConfig<Context> {
     /** 禁止在初始化时打印 */
     noConsoleInit?: boolean;
+    /** 禁用onRequest打印 */
+    noConsoleOnRequest?: boolean;
+    onRequest?(ctx: Koa.Context & Context, next: Koa.Next): void;
     logConfig?: LogOutputOption;
     /** 没有匹配到路由时是否直接返回404 */
     noMatchStop?: boolean;
   }
 
-  export type Config<State, Context> = InitRequiredConfig<State, Context> & NotRequiredConfig;
+  export type Config<State, Context> = InitRequiredConfig<State, Context> & NotRequiredConfig<Context>;
 
   export class Application<S = any, C = any> {
     private controller_map = new Map<string, ControllerInstance>();
     private onInitializedFun = (instance: Application<S, C>) => instance;
-    private __config: Required<InitRequiredConfig<S, C>> & NotRequiredConfig;
+    private __config: Required<InitRequiredConfig<S, C>> & NotRequiredConfig<Context>;
     private __initPromise: Promise<void>;
     /**
      *
@@ -94,9 +97,16 @@ export namespace KoaFramework {
     }
 
     private onRequest = async (ctx: Koa.Context, next: Koa.Next) => {
-      const { noMatchStop } = this.__config;
+      const {onRequest: onRequestCall, noMatchStop, noConsoleOnRequest } = this.__config;
 
-      log.info(`onRequest: ${ctx.method} ${ctx.href}`);
+      if(!noConsoleOnRequest) {
+        log.info(`onRequest: ${ctx.method} ${ctx.href}`);
+      }
+      
+      if(onRequestCall) {
+        onRequestCall(ctx, next);
+      }
+
       const result = await new Promise(async (resolve, reject) => {
         // 匹配监听
         const listenerMatchResult = this.matchController(ctx);
