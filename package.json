@@ -1,6 +1,6 @@
 {
   "name": "@dangao/koa-framework",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "main": "dist/index.js",
   "author": "kedan",
   "repository": "https://github.com/dangaogit/koa-framework.git",
@@ -14,6 +14,13 @@
   },
   "files": [
     "dist/*"
+  ],
+  "keywords": [
+    "koa",
+    "framework",
+    "koa framework",
+    "koa spring",
+    "spring"
   ],
   "devDependencies": {
     "@types/jest": "^26.0.3",
