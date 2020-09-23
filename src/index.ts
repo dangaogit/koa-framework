@@ -29,7 +29,7 @@ export namespace KoaFramework {
     noConsoleInit?: boolean;
     /** 禁用onRequest打印 */
     noConsoleOnRequest?: boolean;
-    onRequest?(ctx: Koa.Context & Context, next: Koa.Next): void;
+    onRequest?(ctx: Koa.Context & Context): void;
     logConfig?: LogOutputOption;
     /** 没有匹配到路由时是否直接返回404 */
     noMatchStop?: boolean;
@@ -104,7 +104,7 @@ export namespace KoaFramework {
       }
       
       if(onRequestCall) {
-        onRequestCall(ctx, next);
+        onRequestCall(ctx);
       }
 
       const result = await new Promise(async (resolve, reject) => {
