@@ -4,12 +4,19 @@ import { RequestParams } from "./request";
 
 export type Context = Koa.Context;
 
-function QueryHandler(key: string, ctx: Context) {
-  return ctx.query[key];
+interface QueryParamOption {
+  key: string;
+  handler?<T>(value: string): T;
 }
-export function QueryParam(key: string) {
+function QueryHandler(option: QueryParamOption, ctx: Context) {
+  const value = ctx.query[option.key];
+  return option.handler ? option.handler(value) : value;
+}
+export function QueryParam(key: string): <T>(target: T, propertyKey: keyof T, argumentIndex: number) => void;
+export function QueryParam(option: QueryParamOption): <T>(target: T, propertyKey: keyof T, argumentIndex: number) => void;
+export function QueryParam(key: string | QueryParamOption) {
   return <T>(target: T, propertyKey: keyof T, argumentIndex: number) => {
-    ParamFactory<T>(target, propertyKey, argumentIndex, QueryHandler.bind(null, key));
+    ParamFactory<T>(target, propertyKey, argumentIndex, QueryHandler.bind(null, typeof key === "string" ? { key } : key));
   };
 }
 
@@ -40,7 +47,7 @@ export interface RequestBodyOption {
   type: RequestBodyType;
 }
 function getRequestBody(type: RequestBodyType, ctx: Koa.Context) {
-  return new Promise<any>(resolve => {
+  return new Promise<any>((resolve) => {
     let buff = Buffer.from([]);
     ctx.req.on("data", (chunk: Buffer) => {
       buff = Buffer.concat([buff, chunk]);
@@ -108,7 +115,7 @@ function ParamFactory<T>(target: T, propertyKey: keyof T, argumentIndex: number,
 export function NotNull<T>(target: T, propertyKey: keyof T, argumentIndex: number) {
   // 在request注解时会注入该数组，所以不会存在null
   let notNullIndexs: number[] | undefined = Reflect.getMetadata(RequestMetadata.paramsNotNull, target[propertyKey]);
-  if(!notNullIndexs) {
+  if (!notNullIndexs) {
     notNullIndexs = [];
     Reflect.defineMetadata(RequestMetadata.paramsNotNull, notNullIndexs, target[propertyKey]);
   }
